@@ -1,3 +1,4 @@
+from PIL import Image, ImageOps, ImageDraw
 import pygame
 import math
 from food import Food
@@ -26,31 +27,35 @@ class Game:
                            for y in range(-self.SCREEN_HEIGHT, 2 * self.SCREEN_HEIGHT, self.cell_size)]
         self.background = Background(self.cell_size)
 
-    def check_collision(self, player_pos, food_pos, player_radius, food_size):
-        distance = math.sqrt((player_pos[0] - food_pos[0])**2 + (player_pos[1] - food_pos[1])**2)
-        return distance < player_radius + food_size
+        # Images
+        # self.player_img = Image.open("Sem1FinalProject/img/shark.png")
+        # self.player_img = pygame.transform.scale(self.player_img, (75, 75))
+        self.player_img = pygame.image.load("Sem1FinalProject/img/shark.png")
+        self.player_img = pygame.transform.scale(self.player_img, (self.player.width, self.player.height))
 
-    def player_at_wall(self):
-        # player_x = self.player.disp_x
-        # player_y = self.player.disp_y
-        if abs(self.background.bg_x) >= self.SCREEN_WIDTH + 350:
-            #self.background.bg_x = 0
-            print("x out of bounds")
-        if abs(self.background.bg_y) >= self.SCREEN_HEIGHT + 250:
-            #self.background.bg_y = 0
-            print("y out of bounds")
-        #print(self.background_grid[0])
-        # Get location of the wall
-        #wall_x = self.background_grid[0][0] - self.background.bg_x
-        #wall_y = self.background_grid[0][1] - self.background.bg_y
-        
-        # if wall_x == self.player.position[0]:
-        #     self.background.bg_x = 0
-        # if wall_y == self.player.position[0]:
-        #     self.background.bg_y = 0
+        self.food_img_1 = pygame.image.load("Sem1FinalProject/img/urchin.png")
+        self.food_img_1 = pygame.transform.scale(self.food_img_1, (self.food.size * 2, self.food.size * 2))
 
-        print(self.background.bg_x)
-        print(self.background.bg_y)
+    def get_dist(self, food_pos, food_size):
+        # distance = math.sqrt((player_pos[0] - food_pos[0])**2 + (player_pos[1] - food_pos[1])**2)
+        # return distance < player_radius + food_size
+
+        # Check collision between player and food
+        # Need to pass in food_pos and food_size
+        player_left = self.player.position[0]
+        player_right = self.player.position[0] + self.player.width
+        player_top = self.player.position[1]
+        player_bottom = self.player.position[1] + self.player.height
+
+        closest_x = max(player_left, min(food_pos[0], player_right))
+        closest_y = max(player_top, min(food_pos[1], player_bottom))
+
+        distance = math.sqrt((closest_x - food_pos[0])**2 + (closest_y - food_pos[1])**2)
+
+        return distance 
+    
+    def check_collision(self, food_pos, food_size):
+        return self.get_dist(food_pos, food_size) < food_size
 
     def run(self):
         running = True
@@ -66,14 +71,18 @@ class Game:
             mouse_pos = pygame.mouse.get_pos()
 
             # Calculate the direction vector from player to mouse
-            if abs(self.background.bg_x) >= self.SCREEN_WIDTH + 375:
-                    direction_x = 0
-            else:
-                direction_x = mouse_pos[0] - self.player.position[0]
-            if abs(self.background.bg_y) >= self.SCREEN_WIDTH + 75:
-                    direction_y = 0
-            else:
-                direction_y = mouse_pos[1] - self.player.position[1]
+            direction_x = mouse_pos[0] - self.player.position[0]
+            direction_y = mouse_pos[1] - self.player.position[1]
+            bound_x = self.SCREEN_WIDTH + 355
+            bound_y = self.SCREEN_WIDTH + 70
+            if self.background.bg_x >= bound_x and direction_x > 0:
+                direction_x = 0
+            elif self.background.bg_x <= (-1 * bound_x) and direction_x < 0:
+                direction_x = 0
+            if self.background.bg_y >= bound_y and direction_y > 0:
+                direction_y = 0
+            elif self.background.bg_y <= (-1 * bound_y) and direction_y < 0:
+                direction_y = 0
 
             # Normalize the direction vector
             magnitude = math.sqrt(direction_x ** 2 + direction_y ** 2)
@@ -87,7 +96,7 @@ class Game:
             # Update player location on map
             speed = self.background.speed
             self.player.update_disp(direction_x * speed, direction_y * speed)
-            self.player_at_wall()
+            # self.player_at_wall()
             # Draw background
             #self.background.draw(self.screen, self.background_grid)
             for cell in self.background_grid:
@@ -99,13 +108,23 @@ class Game:
             for food_item in self.food.food_list[:]:
                 food_pos = (food_item[0] - self.background.bg_x, food_item[1] - self.background.bg_y)
                 # self.food.draw(self.screen, self.background.bg_x, self.background.bg_y)
-                pygame.draw.circle(self.screen, self.food.color, food_pos, self.food.size)
+                if self.get_dist(food_pos, self.food.size) < self.food.reveal_dist:
+                    #color = (227, 32, 162)
+                    self.screen.blit(self.food_img_1, food_pos)
+                else:
+                    #color = self.food.color
+                    pygame.draw.circle(self.screen, self.food.color, (food_pos[0] + self.food.size, food_pos[1] + self.food.size), self.food.size)
+                #pygame.draw.circle(self.screen, color, food_pos, self.food.size)
+                #self.screen.blit(self.food_img_1, food_pos)
                 player_position = self.player.position
-                if self.check_collision(player_position, food_pos, self.player.radius, self.food.size):
+                if self.check_collision(food_pos, self.food.size):
                     self.food.food_list.remove(food_item)
+                    self.food.update_reveal_dist(5) # only do this when detracting from health
 
             # Draw player
-            pygame.draw.circle(self.screen, self.player.color, (self.player.position[0], self.player.position[1]), self.player.radius)
+            #pygame.draw.circle(self.screen, self.player.color, (self.player.position[0], self.player.position[1]), self.player.radius)
+            self.screen.blit(self.player_img, (self.player.position[0], self.player.position[1]))
+            # pygame.draw.rect(self.screen, self.player.color, (self.player.position[0], self.player.position[1], self.player.width, self.player.height), 1)
 
             # Limit frames per second
             self.clock.tick(60)
