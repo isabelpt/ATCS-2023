@@ -10,6 +10,8 @@ class Player:
         self.disp_x = 0
         self.disp_y = 0
         self.health = 100
+        self.img = pygame.image.load("Sem1FinalProject/img/shark.png")
+        self.img = pygame.transform.scale(self.img, (self.width, self.height))
 
     def update_disp(self, dist_x, dist_y):
         self.disp_x += dist_x
@@ -19,4 +21,10 @@ class Player:
     def update_health(self, health_change):
         # Dependent on assumption that health doesn't increase
         self.health = max(0, self.health + health_change)
+
+    def draw(self, screen):
+        # Draw player
+        screen.blit(self.img, (self.position[0], self.position[1]))
     
+        # Draw health bar
+        pygame.draw.rect(screen, (245, 66, 111), (0, 0, self.health, self.health), self.health, 1)

@@ -27,19 +27,7 @@ class Game:
                            for y in range(-self.SCREEN_HEIGHT, 2 * self.SCREEN_HEIGHT, self.cell_size)]
         self.background = Background(self.cell_size)
 
-        # Images
-        # self.player_img = Image.open("Sem1FinalProject/img/shark.png")
-        # self.player_img = pygame.transform.scale(self.player_img, (75, 75))
-        self.player_img = pygame.image.load("Sem1FinalProject/img/shark.png")
-        self.player_img = pygame.transform.scale(self.player_img, (self.player.width, self.player.height))
-
-        self.food_img_1 = pygame.image.load("Sem1FinalProject/img/urchin.png")
-        self.food_img_1 = pygame.transform.scale(self.food_img_1, (self.food.size * 2, self.food.size * 2))
-
     def get_dist(self, food_pos, food_size):
-        # distance = math.sqrt((player_pos[0] - food_pos[0])**2 + (player_pos[1] - food_pos[1])**2)
-        # return distance < player_radius + food_size
-
         # Check collision between player and food
         # Need to pass in food_pos and food_size
         player_left = self.player.position[0]
@@ -55,7 +43,8 @@ class Game:
         return distance 
     
     def check_collision(self, food_pos, food_size):
-        return self.get_dist(food_pos, food_size) < food_size
+        # Rigged to make easier
+        return self.get_dist(food_pos, food_size) + 10 < food_size
 
     def run(self):
         running = True
@@ -98,33 +87,21 @@ class Game:
             self.player.update_disp(direction_x * speed, direction_y * speed)
             # self.player_at_wall()
             # Draw background
-            #self.background.draw(self.screen, self.background_grid)
-            for cell in self.background_grid:
-                cell_pos = (cell[0] - self.background.bg_x, cell[1] - self.background.bg_y)
-                pygame.draw.rect(self.screen, (68, 86, 189), (cell_pos[0], cell_pos[1], self.cell_size, self.cell_size), 1)
+            self.background.draw(self.screen, self.background_grid)
                 
-
             # Draw food and check collision with player
-            for food_item in self.food.food_list[:]:
+            for item in self.food.food_list[:]:
+                food_item = item.food_pos
                 food_pos = (food_item[0] - self.background.bg_x, food_item[1] - self.background.bg_y)
-                # self.food.draw(self.screen, self.background.bg_x, self.background.bg_y)
-                if self.get_dist(food_pos, self.food.size) < self.food.reveal_dist:
-                    #color = (227, 32, 162)
-                    self.screen.blit(self.food_img_1, food_pos)
-                else:
-                    #color = self.food.color
-                    pygame.draw.circle(self.screen, self.food.color, (food_pos[0] + self.food.size, food_pos[1] + self.food.size), self.food.size)
-                #pygame.draw.circle(self.screen, color, food_pos, self.food.size)
-                #self.screen.blit(self.food_img_1, food_pos)
-                player_position = self.player.position
+                item.update(0 if self.get_dist(food_pos, self.food.size) < self.food.reveal_dist else 1)
+                item.draw(self.screen, food_pos)
+
                 if self.check_collision(food_pos, self.food.size):
-                    self.food.food_list.remove(food_item)
-                    self.food.update_reveal_dist(5) # only do this when detracting from health
+                    self.food.food_list.remove(item)
+                    self.food.update_reveal_dist(5) 
 
             # Draw player
-            #pygame.draw.circle(self.screen, self.player.color, (self.player.position[0], self.player.position[1]), self.player.radius)
-            self.screen.blit(self.player_img, (self.player.position[0], self.player.position[1]))
-            # pygame.draw.rect(self.screen, self.player.color, (self.player.position[0], self.player.position[1], self.player.width, self.player.height), 1)
+            self.player.draw(self.screen)
 
             # Limit frames per second
             self.clock.tick(60)
