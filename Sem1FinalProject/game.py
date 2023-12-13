@@ -4,6 +4,7 @@ Shark Game
 @author: Isabel Prado-Tucker
 @version: 2023
 """
+from time import sleep
 import pygame
 import math
 from food import Food
@@ -56,6 +57,7 @@ class Game:
     def init_fsm(self):
         self.fsm.add_transition(True, self.STARTUP, self.running, self.RUNNING) # Switch from startup to game
         self.fsm.add_transition(True, self.RUNNING, self.end_screen, self.END) # Switch from game to end screen
+        self.fsm.add_transition(True, self.END, self.end_screen, self.END) # Switch from game to end screen
 
     # Returns the distance between a piece of food and the player
     # Used for collision detection and revealing the food item
