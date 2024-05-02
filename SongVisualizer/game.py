@@ -4,34 +4,36 @@ import sys
 from song import Song
 from audiobar import AudioBar
 import numpy as np
-from CircleAudioBar import CircleAudioBar
+import math
 
 class Game:
     def __init__(self, width, height, song):
-        self.width = width
-        self.height = height
-        self.song = song
+        self.width, self.height, self.song = width, height, song
         self.bpm = self.song.get_tempo()
+
         self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
         self.next_color_change = pygame.time.get_ticks()
 
-        self.bars = []
-        self.frequencies = np.arange(100, 8000, 100)
+        self.color_i = 0
+        self.color = self.song.top_colors[self.color_i]
+
+        self.audio_bars = []
+        self.frequencies = np.arange(0, self.width, 15)
 
         self.num_bars = len(self.frequencies)
-        self.bar_width = self.width/self.num_bars
+        self.bar_width = math.ceil(self.width/self.num_bars)
         self.bar_x = (self.width - self.bar_width*self.num_bars)/2
 
         for freq in self.frequencies:
-            self.bars.append(AudioBar(self.bar_x, 300, freq, (255, 0, 0), max_height=400, width=self.bar_width))
+            self.audio_bars.append(AudioBar(self.bar_x, 20, freq, self.song.top_colors[len(self.song.top_colors)-1], self.bar_width, self.height))
             self.bar_x += self.bar_width
         
-        self.arc = CircleAudioBar(200, 300, freq, (255, 0, 0), max_height=400, width=self.bar_width)
-
-        self.min_radius = 125
+        self.min_radius = 175
         self.radius = self.min_radius
         self.radius_vel = 1
+
+        pygame.mixer.music.load("_assets/good.mp3")
 
     def random_color(self, alpha=10):
         return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), alpha)
@@ -39,14 +41,9 @@ class Game:
     def calculate_beat_interval(self):
         return 60 * 1000 / self.bpm
 
-    
-
     def run(self):
         current_time = pygame.time.get_ticks()
         last_time = current_time
-        color = self.random_color()
-
-        pygame.mixer.music.load("_assets/met.mp3")
         pygame.mixer.music.play(0)
 
         running = True
@@ -61,23 +58,21 @@ class Game:
                     running = False
             
             if current_time >= self.next_color_change:
-                #self.song.draw_album(self.screen)
-                color = self.random_color()
-                color2 = self.random_color()
+                if self.color_i >= len(self.song.top_colors) - 1:
+                    self.color_i = 0
+                self.color = self.song.top_colors[self.color_i]
+                self.color_i += 1
                 self.radius_vel *= -1
                 self.next_color_change += beat_interval
 
-            self.screen.fill(color)
-            #pygame.draw.circle(self.screen, color2, (self.width/2,self.height/2), self.radius)
-            self.song.draw(self.screen, self.radius, (self.width/2-self.radius,self.height/2-self.radius))
+            self.screen.fill(self.color)
 
-            #self.screen.fill((255, 255, 255))
-
-            for b in self.bars:
-                b.update(change_time, self.song.get_decibel(pygame.mixer.music.get_pos()/1000.0, b.freq))
-                b.render(self.screen)
+            for bar in self.audio_bars:
+                bar.update(change_time, self.song.get_decibel(pygame.mixer.music.get_pos()/1000.0, bar.frequency))
+                bar.draw(self.screen)
             
-
+            self.song.draw(self.screen, self.radius, (self.width/2-self.radius,self.height/2-self.radius))
+            
             self.radius += self.radius_vel
 
             pygame.display.flip()
@@ -86,10 +81,9 @@ class Game:
         pygame.quit()
         sys.exit()
 
-# Example usage:
 if __name__ == "__main__":
     pygame.init()
     WIDTH, HEIGHT = 500, 500
     song = Song("song", WIDTH, HEIGHT)
-    color_changing_screen = Game(WIDTH, HEIGHT, song)
-    color_changing_screen.run()
+    game = Game(WIDTH, HEIGHT, song)
+    game.run()
