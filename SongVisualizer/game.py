@@ -15,7 +15,6 @@ from song import Song
 from frequency_visual import Freq_Visual
 import numpy as np
 import math
-from PIL import Image, ImageOps, ImageDraw
 
 # Controls the pygame screen and coordinated movement
 class Game:
@@ -56,8 +55,8 @@ class Game:
         self.radius_vel = 1
 
         # Load music file and arm image
-        pygame.mixer.music.load("_assets/" + self.song.song_name +".mp3")
-        self.arm = pygame.image.load("_assets/arm.png")
+        pygame.mixer.music.load(self.song.song_fp)
+        self.arm = pygame.image.load("_assets/img/arm.png")
         self.arm = pygame.transform.scale(self.arm, (140, 175))
 
     def random_color(self, alpha=10):
@@ -119,12 +118,12 @@ class Game:
             
             # Draw record player and arm
             record_player_w, record_player_h = 350, 250
-            pygame.draw.rect(self.screen, (255,255,255), pygame.Rect((self.width - record_player_w)/2, (self.height - record_player_h)/2, record_player_w, record_player_h), border_radius=10)
+            pygame.draw.rect(self.screen, (255,255,255, 200), pygame.Rect((self.width - record_player_w)/2, (self.height - record_player_h)/2 - 75, record_player_w, record_player_h), border_radius=10)
             offset = 25
-            self.song.draw(self.screen, self.radius, (self.width/2-self.radius - offset,self.height/2-self.radius))
+            self.song.draw(self.screen, self.radius, (self.width/2-self.radius - offset,self.height/2-self.radius - 75))
             self.radius += self.radius_vel
 
-            self.screen.blit(self.arm, (275, 138))
+            self.screen.blit(self.arm, (275, 138 - 75))
             pygame.display.flip()
             self.clock.tick(60)
 
@@ -132,8 +131,20 @@ class Game:
         sys.exit()
 
 if __name__ == "__main__":
+    print("  █▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                                   █▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print("██▀▀▀██▀▀▀▀▀▀██▀▀▀██ » Isabel's Music Visualizer « ██▀▀▀██▀▀▀▀▀▀██▀▀▀██")
+    print("█▒▒▒▒▒█▒▀▀▀▀▒█▒▒▒▒▒█      0:00 ─〇───── 0:00       █▒▒▒▒▒█▒▀▀▀▀▒█▒▒▒▒▒█")
+    print("█▒▒▒▒▒█▒████▒█▒▒▒▒▒█     ⇄   ◃◃   ⅠⅠ   ▹▹   ↻      █▒▒▒▒▒█▒████▒█▒▒▒▒▒█")
+    print("██▄▄▄██▄▄▄▄▄▄██▄▄▄██                               ██▄▄▄██▄▄▄▄▄▄██▄▄▄██")
+    print("Here are the song options: ")
+    print("1. Not Strong Enough by Boygenius")
+    print("2. Stick Season by Noah Kahan")
+    print("3. Kill Bill by SZA")
+    print("4. Last Night by Morgan Wallen")
+    print("5. Cruel Summer by Taylor Swift")
+    choice = str(input("Enter the number of the track you want to play: "))
     pygame.init()
     WIDTH, HEIGHT = 500, 500
-    song = Song("song", WIDTH, HEIGHT)
+    song = Song(choice, WIDTH, HEIGHT)
     game = Game(WIDTH, HEIGHT, song)
     game.run()

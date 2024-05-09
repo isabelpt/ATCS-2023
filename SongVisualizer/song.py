@@ -24,8 +24,10 @@ class Song:
         """
         # Load audio data and album cover
         self.song_name = song_name
-        self.y, self.sr = librosa.load("_assets/" + self.song_name + ".mp3")
-        self.album_cover = pygame.image.load("_assets/sza.png")
+        self.song_fp = "_assets/song" + str(self.song_name) + "/song.mp3"
+        self.cover_fp = "_assets/song" + str(self.song_name) + "/cover.png"
+        self.y, self.sr = librosa.load(self.song_fp)
+        self.album_cover = pygame.image.load(self.cover_fp)
         self.album_cover = pygame.transform.scale(self.album_cover, (width, height))
 
         # Calculate spectrogram and related data
@@ -39,13 +41,13 @@ class Song:
         self.frequencies_index_ratio = len(self.frequencies)/self.frequencies[len(self.frequencies)-1]
 
         # Extract top colors from the album cover image
-        self.top_colors = self.get_top_colors("_assets/sza.png")
+        self.top_colors = self.get_top_colors(self.cover_fp)
         # Create and load record image
-        self.record_img = self.create_record("_assets/sza.png", "_assets/record_img.png")
-        self.record = pygame.image.load("_assets/record_img.png")
+        self.record_img = self.create_record(self.cover_fp, "_assets/img/record_img.png")
+        self.record = pygame.image.load("_assets/img/record_img.png")
         # Generate rotated images of the record for the spinning effect
         self.rot_images = []
-        self.make_rotated_images(3)
+        self.make_rotated_images(30)
         self.counter = 1 # Tracks rotation
 
     def get_tempo(self):
@@ -121,7 +123,7 @@ class Song:
     def create_record(self, album_cover_url, out_path):
         # Open the base and overlay images
         base_img = Image.open(album_cover_url)
-        overlay_img = Image.open('_assets/record.png')
+        overlay_img = Image.open('_assets/img/record.png')
         overlay_img = overlay_img.crop((25,25,487,487))
         overlay_img = overlay_img.convert('RGBA').resize(base_img.size)
 
@@ -148,12 +150,12 @@ class Song:
         Parameters:
             int: The number of images to create
         """
-        orig_img = Image.open("_assets/record_img.png")
+        orig_img = Image.open("_assets/img/record_img.png")
         inc = 360/num
         for n in range(1, num):
             new_img = orig_img.rotate(n*inc)
-            new_img.save("_assets/record" + str(n) + ".png")
-            self.rot_images.append(pygame.image.load("_assets/record" + str(n) + ".png"))
+            new_img.save("_assets/img/record" + str(n) + ".png")
+            self.rot_images.append(pygame.image.load("_assets/img/record" + str(n) + ".png"))
     
     def draw(self, screen, radius, loc):
         """

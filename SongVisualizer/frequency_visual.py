@@ -51,4 +51,4 @@ class Freq_Visual:
             screen (Pygame Screen): Scren to draw visual onto.
         """
         # Draw rectangle representing the visual representation on the screen
-        pygame.draw.rect(screen, self.color, (self.x, self.y + self.max_height - self.height, self.width, self.height))
+        pygame.draw.rect(screen, self.color, (self.x, self.y + self.max_height - self.height + 75, self.width, self.height))
