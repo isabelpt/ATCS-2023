@@ -143,6 +143,9 @@ if __name__ == "__main__":
     print("4. Last Night by Morgan Wallen")
     print("5. Cruel Summer by Taylor Swift")
     choice = str(input("Enter the number of the track you want to play: "))
+    if not choice.isdigit() or not 1 <= int(choice) <= 5:
+        print("Invalid input. Canceling program.")
+        exit()
     pygame.init()
     WIDTH, HEIGHT = 500, 500
     song = Song(choice, WIDTH, HEIGHT)
